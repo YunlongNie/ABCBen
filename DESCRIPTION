@@ -1,4 +1,4 @@
-Package: EasyABCBen
+Package: ABCBen
 Type: Package
 Title: Efficient Approximate Bayesian Computation Sampling Schemes
 Version: 1.5
