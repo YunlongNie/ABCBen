@@ -1126,7 +1126,7 @@
 ## in each dimension (cf paragraph 3.2 in Del Moral et al. 2012)
 .ABC_Delmoral <- function(model, prior, prior_test, nb_simul, summary_stat_target, 
     use_seed, verbose, alpha = 0.9, M = 1, nb_threshold = floor(nb_simul/2), tolerance_target = -1, 
-    dist_weights=NULL, seed_count = 0, progress_bar = FALSE, max_pick=10000,outputname="Exp1") {
+    dist_weights=NULL, seed_count = 0, progress_bar = FALSE, max_pick=10000,outputname="Exp1",simul_below_tol_previous,kstep_ini=1) {
     ## checking errors in the inputs
     if (!is.vector(alpha)) 
         stop("'alpha' has to be a number.")
@@ -1176,8 +1176,8 @@
     }
     nstat = length(summary_stat_target)
     # step 1 classic ABC step
-    simul_below_tol = .ABC_rejection_M(model, prior, prior_test, nb_simul, M, use_seed, 
-        seed_count)
+    simul_below_tol = simul_below_tol_previous[,-1]
+
     seed_count = seed_count + M * nb_simul
     tab_weight = rep(1/nb_simul, nb_simul)
     ESS = nb_simul
@@ -1186,30 +1186,21 @@
     #    sd)  # determination of the normalization constants in each dimension associated to each summary statistic, this normalization will not change during all the algorithm
     sd_simul = summary_stat_target
     l = dim(simul_below_tol)[2]
-    if (M > 1) {
-        particle_dist_mat = .compute_dist_M(M, summary_stat_target, as.matrix(as.matrix(simul_below_tol)[, 
+
+    particle_dist_mat = .compute_dist(summary_stat_target, as.matrix(as.matrix(simul_below_tol)[, 
             (nparam + 1):(nparam + nstat)]), sd_simul, dist_weights=dist_weights)
-    } else {
-        particle_dist_mat = .compute_dist(summary_stat_target, as.matrix(as.matrix(simul_below_tol)[, 
-            (nparam + 1):(nparam + nstat)]), sd_simul, dist_weights=dist_weights)
-    }
+    
     dim(particle_dist_mat) <- c(nb_simul, M)
     new_tolerance = max(particle_dist_mat)
     tab_weight2 = .replicate_tab(tab_weight, M)
     intermediary_steps = list(NULL)
-    if (verbose == TRUE) {
-        write.table(as.matrix(cbind(tab_weight2, simul_below_tol)), file = sprintf("%s_output_step1",outputname), 
-            row.names = F, col.names = F, quote = F)
-        write.table(as.numeric(seed_count - seed_count_ini), file = sprintf("%s_n_simul_tot_step1",outputname), 
-            row.names = F, col.names = F, quote = F)
-        intermediary_steps[[1]] = list(n_simul_tot = as.numeric(seed_count - seed_count_ini), 
-            posterior = as.matrix(cbind(tab_weight2, simul_below_tol)))
-    }
+
     if (progress_bar) {
         print("step 1 completed")
     }
     # following steps
-    kstep = 1
+
+    kstep = kstep_ini
     while (new_tolerance > tolerance_target) {
         kstep = kstep + 1
         # determination of the new tolerance
@@ -1245,13 +1236,10 @@
                 }
             }
             particles = as.matrix(particles[, 1:nparam])
-            if (M > 1) {
-                particle_dist_mat = .compute_dist_M(M, summary_stat_target, as.matrix(as.matrix(simul_below_tol)[, 
-                  (nparam + 1):(nparam + nstat)]), sd_simul, dist_weights=dist_weights)
-            } else {
+   
                 particle_dist_mat = .compute_dist(summary_stat_target, as.matrix(as.matrix(simul_below_tol)[, 
                   (nparam + 1):(nparam + nstat)]), sd_simul, dist_weights=dist_weights)
-            }
+        
             dim(particle_dist_mat) <- c(nb_simul, M)
             tab_below = .compute_below(particle_dist_mat, new_tolerance)
             # reset their weight to 1/nb_simul
@@ -1315,18 +1303,14 @@
                 dim(tab_new_simul2) <- c(M, (nparam + nstat))
                 # check whether the move is accepted
                 n_acc = 1
-                if (M > 1) {
-                  new_dist = .compute_dist_M(M, summary_stat_target, as.matrix(as.matrix(tab_new_simul2)[, 
-                    (nparam + 1):(nparam + nstat)]), sd_simul, dist_weights=dist_weights)
-                  n_acc = length(new_dist[new_dist < new_tolerance])
-                } else {
+    
                   new_dist = .compute_dist(summary_stat_target, rbind(tab_new_simul2[(nparam + 
                     1):(nparam + nstat)], tab_new_simul2[(nparam + 1):(nparam + nstat)]), 
                     sd_simul, dist_weights=dist_weights)
                   if (new_dist[1] > new_tolerance) {
                     n_acc = 0
                   }
-                }
+    
                 MH = min(1, (n_acc/tab_below[i]))
                 uuu = runif(1)
                 if (uuu <= MH) {
@@ -1388,9 +1372,9 @@
                 kstep, sep = ""), row.names = F, col.names = F, quote = F)
             write.table(as.numeric(seed_count - seed_count_ini), file = paste(outputname,"_n_simul_tot_step", 
                 kstep, sep = ""), row.names = F, col.names = F, quote = F)
-            intermediary_steps[[kstep]] = list(n_simul_tot = as.numeric(seed_count - 
-                seed_count_ini), tol_step = as.numeric(new_tolerance), posterior = as.matrix(cbind(tab_weight2, 
-                simul_below_tol)))
+           # intermediary_steps[[kstep]] = list(n_simul_tot = as.numeric(seed_count - 
+           #     seed_count_ini), tol_step = as.numeric(new_tolerance), posterior = as.matrix(cbind(tab_weight2, 
+            #    simul_below_tol)))
         }
         if (progress_bar) {
             print(paste("step ", kstep, " completed - tol =", new_tolerance, sep = ""))
