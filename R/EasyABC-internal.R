@@ -1179,7 +1179,9 @@
     simul_below_tol = simul_below_tol_previous[,-1]
 
     seed_count = seed_count + M * nb_simul
-    tab_weight = rep(1/nb_simul, nb_simul)
+    #tab_weight = rep(1/nb_simul, nb_simul)
+    tab_weight = simul_below_tol_previous[1,]
+
     ESS = nb_simul
     uu = (1:nb_simul) * M  # to compute sd_simul with only one simulation per parameter set
     # sd_simul = sapply(as.data.frame(simul_below_tol[uu, (nparam + 1):(nparam + nstat)]), 
