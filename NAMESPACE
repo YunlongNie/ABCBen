@@ -1,6 +1,6 @@
 #exportPattern("^[[:alpha:]]+")
 export(trait_model)
-useDynLib(EasyABCBen)
+useDynLib(ABCBen)
 export(ABC_rejection)
 export(ABC_emulation)
 export(ABC_sequential)
