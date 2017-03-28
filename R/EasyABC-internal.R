@@ -1126,7 +1126,7 @@
 ## in each dimension (cf paragraph 3.2 in Del Moral et al. 2012)
 .ABC_Delmoral <- function(model, prior, prior_test, nb_simul, summary_stat_target, 
     use_seed, verbose, alpha = 0.9, M = 1, nb_threshold = floor(nb_simul/2), tolerance_target = -1, 
-    dist_weights=NULL, seed_count = 0, progress_bar = FALSE, max_pick=10000,outputname="Exp1",simul_below_tol_previous,kstep_ini=1) {
+    dist_weights=NULL, seed_count = 0, progress_bar = FALSE, max_pick=10000,outputname="Exp1",simul_below_tol_previous,kstep_ini=1,new_tolerance=NULL) {
     ## checking errors in the inputs
     if (!is.vector(alpha)) 
         stop("'alpha' has to be a number.")
@@ -1193,7 +1193,8 @@
             (nparam + 1):(nparam + nstat)]), sd_simul, dist_weights=dist_weights)
     
     dim(particle_dist_mat) <- c(nb_simul, M)
-    new_tolerance = max(particle_dist_mat)
+
+    if (is.null(new_tolerance))  new_tolerance = max(particle_dist_mat)
     tab_weight2 = .replicate_tab(tab_weight, M)
     intermediary_steps = list(NULL)
 
