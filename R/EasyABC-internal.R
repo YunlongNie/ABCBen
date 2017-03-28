@@ -1126,7 +1126,8 @@
 ## in each dimension (cf paragraph 3.2 in Del Moral et al. 2012)
 .ABC_Delmoral <- function(model, prior, prior_test, nb_simul, summary_stat_target, 
     use_seed, verbose, alpha = 0.9, M = 1, nb_threshold = floor(nb_simul/2), tolerance_target = -1, 
-    dist_weights=NULL, seed_count = 0, progress_bar = FALSE, max_pick=10000,outputname="Exp1",simul_below_tol_previous,kstep_ini=1,new_tolerance=NULL) {
+    dist_weights=NULL, seed_count = 0, progress_bar = FALSE, max_pick=10000,outputname="Exp1",
+                          simul_below_tol_previous,kstep_ini=1,new_tolerance=NULL,ESS=NULL) {
     ## checking errors in the inputs
     if (!is.vector(alpha)) 
         stop("'alpha' has to be a number.")
@@ -1182,7 +1183,11 @@
     #tab_weight = rep(1/nb_simul, nb_simul)
     tab_weight = simul_below_tol_previous[1,]
 
-    ESS = nb_simul
+        if (is.null(ESS )) 
+    {
+         ESS = nb_simul
+    }
+        
     uu = (1:nb_simul) * M  # to compute sd_simul with only one simulation per parameter set
     # sd_simul = sapply(as.data.frame(simul_below_tol[uu, (nparam + 1):(nparam + nstat)]), 
     #    sd)  # determination of the normalization constants in each dimension associated to each summary statistic, this normalization will not change during all the algorithm
@@ -1379,6 +1384,9 @@
                 kstep, sep = ""), row.names = F, col.names = F, quote = F)
             write.table(as.numeric(seed_count - seed_count_ini), file = paste(outputname,"_n_simul_tot_step", 
                 kstep, sep = ""), row.names = F, col.names = F, quote = F)
+            write.table(as.numeric(ESS), file = paste(outputname,"_ESS_step", 
+                kstep, sep = ""), row.names = F, col.names = F, quote = F)
+            
            # intermediary_steps[[kstep]] = list(n_simul_tot = as.numeric(seed_count - 
            #     seed_count_ini), tol_step = as.numeric(new_tolerance), posterior = as.matrix(cbind(tab_weight2, 
             #    simul_below_tol)))
