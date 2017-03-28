@@ -1194,7 +1194,11 @@
     
     dim(particle_dist_mat) <- c(nb_simul, M)
 
-    if (is.null(new_tolerance))  new_tolerance = max(particle_dist_mat)
+    if (is.null(new_tolerance)) 
+    {
+        new_tolerance = max(particle_dist_mat)
+    }
+        
     tab_weight2 = .replicate_tab(tab_weight, M)
     intermediary_steps = list(NULL)
 
